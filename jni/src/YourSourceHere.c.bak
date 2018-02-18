@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <android/log.h>
+#include <GLES2/gl2.h>
+#include "SDL.h"
+#define GLFW_INCLUDE_ES2
+#define NANOVG_GLES2_IMPLEMENTATION
+#include "nanovg.h"
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"
+
+int SDL_main(int argc, char **argv) { 
+  SDL_Window *window = NULL;
+  SDL_GLContext context;
+  SDL_Event event;
+  NVGcontext* vg = NULL;
+  
+    int flags = SDL_INIT_EVERYTHING & ~(SDL_INIT_TIMER | SDL_INIT_HAPTIC);
+    if (SDL_Init(flags) < 0)
+    {
+    	__android_log_print(ANDROID_LOG_ERROR, "SDL-my-main", "error: sdl2 init failed: %s", SDL_GetError());
+        return 1;
+    }
+    
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+    window = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 800,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    if (!window)
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+        window = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 800,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+        if (!window)
+        {
+            __android_log_print(ANDROID_LOG_ERROR, "SDL-my-main", "error2: sdl2 init failed: %s", SDL_GetError());
+            return 1;
+        }
+    }
+    context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, context);
+    
+    vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    if (vg == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "SDL-my-main", "error: nanovg init failed");
+        return 1;
+    }
+    
+    nvgBeginPath(vg);
+	nvgRect(vg, 100,100, 120,30);
+	nvgFillColor(vg, nvgRGBA(255,192,0,255));
+	nvgFill(vg);
+    SDL_GL_SwapWindow(window);
+    int quit=0;
+    while (!quit)
+    {
+
+        SDL_PollEvent(&event);
+
+        switch(event.type)
+        {
+        case SDL_QUIT:
+          quit=1;
+          break;
+        }
+        nvgBeginPath(vg);
+		nvgRect(vg, 300,100, 120,30);
+		nvgFillColor(vg, nvgRGBA(255,192,0,255));
+		nvgFill(vg);
+    }
+    
+    return 0;
+}
